@@ -6,9 +6,9 @@
 !.ycm_extra_conf.py
 !/dependencies/**/*
 !/src/*.cpp
-!/src/h
+!/src/*.h
 !/tests/*.cpp
-!/tests/h
+!/tests/*.h
 !/script/*.py
 !/data/*.x
 /build/
