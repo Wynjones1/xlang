@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.6)
-set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
+# Setup CMake variables.
+set(CMAKE_EXPORT_COMPILE_COMMANDS  True)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
 find_package(Deps REQUIRED)
 
 add_subdirectory(dependencies)
-include_directories(${DEPENDENCIES_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
-
-add_definitions(-fno-exceptions --std=c++17 -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
-add_executable(out src/main.cpp)
-target_link_libraries(out ${DEPENDENCIES_LIBRARIES})
+add_subdirectory(src)
+add_subdirectory(tests)
