@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <optional>
 
 std::string to_string(TokenType type)
 {
@@ -85,7 +86,7 @@ TokenState tokenise(const std::string &value)
         {TokenType::Integer,    std::regex(R"(^[0-9]+)")},
         {TokenType::Operator,   std::regex(R"(^(\+|\-|/|\*|%|<=?|>=?|==|!=))")},
         {TokenType::Newline,    std::regex(R"(^\n)")},
-        {TokenType::Whitespace, std::regex(R"(^\s+)")},
+        {TokenType::Whitespace, std::regex(R"(^[ \t]+)")},
         {TokenType::LParen,     std::regex(R"(^\()")},
         {TokenType::RParen,     std::regex(R"(^\))")},
         {TokenType::LBrace,     std::regex(R"(^\{)")},
@@ -93,37 +94,46 @@ TokenState tokenise(const std::string &value)
     };
     TokenState out(value);
 
-    auto match      = std::smatch();
     auto b           = std::begin(value);
     auto e           = std::end(value);
     auto line_start  = size_t(0);
     auto column      = size_t(0);
 
-again:
     while(b != e)
     {
+        auto match = std::optional<std::pair<TokenType,std::smatch>>();
         for(const auto &[type, regex] : regexes)
         {
-            if(std::regex_search(b, e, match, regex))
+            auto new_match      = std::smatch();
+            if(std::regex_search(b, e, new_match, regex))
             {
-                auto len = match[0].length();
-                if(type != TokenType::Whitespace)
+                if(!match || new_match[0].length() > match->second[0].length())
                 {
-                    auto &tok = out.add_token(type, line_start, column, len);
+                    match = {type, new_match};
                 }
-                column += len;
-                b      += len;
-                if(type == TokenType::Newline)
-                {
-                    line_start += column;
-                    column      = 0;
-                }
-                goto again;
             }
         }
-        char temp[1] = {'\n'};
-        auto end_line = std::find_first_of(b, e, std::begin(temp), std::end(temp));
-        error("Could not find match.\n{}\n", std::string(b, end_line));
+
+        if(!match)
+        {
+            char temp[1] = {'\n'};
+            auto end_line = std::find_first_of(b, e, std::begin(temp), std::end(temp));
+            error("Could not find match.\n{}\n", std::string(b, end_line));
+        }
+        auto &[t, m] = *match;
+
+        auto len = m[0].length();
+        if(t != TokenType::Whitespace)
+        {
+            auto &tok = out.add_token(t, line_start, column, len);
+        }
+        column += len;
+        b      += len;
+        if(t == TokenType::Newline)
+        {
+            line_start += column;
+            column      = 0;
+        }
     }
     return out;
 }

@@ -81,3 +81,18 @@ BOOST_AUTO_TEST_CASE(lexer_test_rest)
                           {TokenType::RBrace,"}"}
                           });
 }
+
+BOOST_AUTO_TEST_CASE(lexer_test_whitespace_0)
+{
+    TEST_TOKENISE(" ",{});
+}
+
+BOOST_AUTO_TEST_CASE(lexer_test_newline_0)
+{
+    TEST_TOKENISE("\n",{ {TokenType::Newline,"\n"}, });
+}
+
+BOOST_AUTO_TEST_CASE(lexer_test_newline_1)
+{
+    TEST_TOKENISE("\n ",{ {TokenType::Newline,"\n"} });
+}
