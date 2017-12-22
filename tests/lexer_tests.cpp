@@ -68,7 +68,6 @@ BOOST_AUTO_TEST_CASE(lexer_test_every_operator)
                           {TokenType::Operator,">="},
                           {TokenType::Operator,"=="},
                           {TokenType::Operator,"!="},
-                          {TokenType::Operator,""}
                           });
 }
 

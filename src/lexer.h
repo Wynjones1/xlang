@@ -60,7 +60,6 @@ struct Token
     size_t           m_column;
 };
 
-
 struct TokenState
 {
     std::string                   m_data;

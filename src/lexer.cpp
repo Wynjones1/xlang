@@ -83,7 +83,7 @@ TokenState tokenise(const std::string &value)
     std::map<TokenType, std::regex> regexes = {
         {TokenType::Identifier, std::regex(R"(^[a-zA-Z][a-zA-Z0-9_]*)")},
         {TokenType::Integer,    std::regex(R"(^[0-9]+)")},
-        {TokenType::Operator,   std::regex(R"(^(\+|\-|\*|%|<|<=|>|>=|==|!=))")},
+        {TokenType::Operator,   std::regex(R"(^(\+|\-|/|\*|%|<=?|>=?|==|!=))")},
         {TokenType::Newline,    std::regex(R"(^\n)")},
         {TokenType::Whitespace, std::regex(R"(^\s+)")},
         {TokenType::LParen,     std::regex(R"(^\()")},
