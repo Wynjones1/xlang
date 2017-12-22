@@ -1,9 +1,10 @@
 #pragma once
-#include "common.h"
-#include "debug.h"
+#include <algorithm>
 #include <regex>
 #include <map>
 #include <unordered_map>
+#include "common.h"
+#include "debug.h"
 
 #define X_TOKEN_LIST \
     X(Identifier) \
@@ -17,6 +18,7 @@
     X(Whitespace) \
     X(KeywordFunction) \
     X(KeywordReturn) \
+    X(KeywordIf) \
 
 enum class TokenType
 {
@@ -33,6 +35,29 @@ std::string to_string(TokenType type)
     return "??";
 }
 
+constexpr std::string_view to_string_view(TokenType type)
+{
+    #define X(name) if(type == TokenType::name) return #name ## sv;
+    X_TOKEN_LIST
+    #undef X
+    return "??";
+}
+
+constexpr auto num_keywords()
+{
+    constexpr auto prefix = "Keyword"sv;
+    uint32_t out = 0;
+#define X(name) \
+    if((to_string_view(TokenType:: name).size() > prefix.size()) && \
+        (to_string_view(TokenType:: name).substr(0, prefix.size()) == prefix)) \
+    { \
+        out += 1; \
+    }
+    X_TOKEN_LIST
+#undef X
+    return out;
+}
+
 struct Token
 {
     TokenType        m_type;
@@ -41,19 +66,6 @@ struct Token
     size_t           m_column;
 };
 
-static TokenType try_convert_to_keyword(std::string_view &view)
-{
-    static std::unordered_map<std::string, TokenType> kw_mapping =
-    {
-        {"function", TokenType::KeywordFunction},
-        {"return",   TokenType::KeywordReturn},
-    };
-    for(auto &[k, v] : kw_mapping)
-    {
-        if(k == view) return v;
-    }
-    return TokenType::Identifier;
-}
 
 struct TokenState
 {
@@ -68,6 +80,21 @@ struct TokenState
     auto &back()
     {
         return m_tokens.back();
+    }
+
+    TokenType try_convert_to_keyword(std::string_view &view)
+    {
+        static std::unordered_map<std::string, TokenType> kw_mapping =
+        {
+            {"function", TokenType::KeywordFunction},
+            {"return",   TokenType::KeywordReturn},
+            {"if",       TokenType::KeywordIf},
+        };
+        for(auto &[k, v] : kw_mapping)
+        {
+            if(k == view) return v;
+        }
+        return TokenType::Identifier;
     }
 
     auto &add_token(TokenType type, size_t line_offset, size_t column, size_t len)
@@ -126,7 +153,7 @@ TokenState tokenise(const std::string &value)
     std::map<TokenType, std::regex> regexes = {
         {TokenType::Identifier, std::regex(R"(^[a-zA-Z][a-zA-Z0-9_]*)")},
         {TokenType::Integer,    std::regex(R"(^[0-9]+)")},
-        {TokenType::Operator,   std::regex(R"(^(\+|\-))")},
+        {TokenType::Operator,   std::regex(R"(^(\+|\-|\*|%|<|<=|>|>=|==|!=))")},
         {TokenType::Newline,    std::regex(R"(^\n)")},
         {TokenType::Whitespace, std::regex(R"(^\s+)")},
         {TokenType::LParen,     std::regex(R"(^\()")},
@@ -164,7 +191,9 @@ again:
                 goto again;
             }
         }
-        error("Could not find match.\n{}", std::string(b, e));
+        char temp[1] = {'\n'};
+        auto end_line = std::find_first_of(b, e, std::begin(temp), std::end(temp));
+        error("Could not find match.\n{}\n", std::string(b, end_line));
     }
     return out;
 }

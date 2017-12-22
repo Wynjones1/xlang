@@ -25,3 +25,6 @@ clean:
 run: all
 	$(BUILD_DIR)/bin/out data/test0.x 2>&1 | tee $(BUILD_DIR)/run.log
 
+test: all
+	$(BUILD_DIR)/bin/unittests 2>&1 | tee $(BUILD_DIR)/test.log
+
