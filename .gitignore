@@ -1,6 +1,6 @@
 *
 !.gitignore
-!CMakeLists.txt
+!/**/*/CMakeLists.txt
 !makefile
 !.ycm_extra_conf.py
 !src/*.cpp
