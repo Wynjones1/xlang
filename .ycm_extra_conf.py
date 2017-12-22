@@ -124,8 +124,7 @@ def GetCompilationInfoForFile( filename ):
     for extension in SOURCE_EXTENSIONS:
       replacement_file = basename + extension
       if os.path.exists( replacement_file ):
-        compilation_info = database.GetCompilationInfoForFile(
-          replacement_file )
+        compilation_info = database.GetCompilationInfoForFile(replacement_file)
         if compilation_info.compiler_flags_:
           return compilation_info
     return None

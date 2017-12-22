@@ -14,6 +14,6 @@ int main(int argc, char **argv)
         fmt::print("{}\n", std::string(80, '*'));
     }
 
-    auto ast = ParseState(tokens).parse<Top>();
+    auto ast = parse(data);
     return 0;
 }
