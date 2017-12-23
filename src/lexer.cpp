@@ -16,15 +16,15 @@ Token &TokenState::back()
 
 static auto try_convert_to_keyword(std::string_view &view)
 {
-    static std::unordered_map<std::string, TokenType> kw_mapping =
+    static std::unordered_map<std::string_view, TokenType> kw_mapping =
     {
         {"function", TokenType::KeywordFunction},
         {"return",   TokenType::KeywordReturn},
         {"if",       TokenType::KeywordIf},
     };
-    for(auto &[k, v] : kw_mapping)
+    if(auto it = kw_mapping.find(view); it != std::end(kw_mapping))
     {
-        if(k == view) return v;
+        return it->second;
     }
     return TokenType::Identifier;
 }
