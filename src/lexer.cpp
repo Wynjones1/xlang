@@ -65,14 +65,13 @@ size_t TokenState::num_lines()
 void TokenState::print_token(size_t index, int context)
 {
     auto &t        = at(index);
-    auto lines     = num_lines();
-    auto min_index = (context            > t.m_line) ? 0     : t.m_line - context;
-    auto max_index = (context + t.m_line > lines   ) ? lines : t.m_line + context + 1;
+    auto min_index = (t.m_line < context) ? 0 : (t.m_line - context);
+    auto max_index = std::min(num_lines(), t.m_line + context + 1);
 
     for(auto i = min_index; i < max_index; i++)
     {
-        fmt::print("{}", m_lines[i]);
-        if(i == m_tokens[index].m_line)
+        fmt::print("{}", m_lines.at(i));
+        if(i == m_tokens.at(index).m_line)
         {
             fmt::print("{}^{}\n", std::string(t.m_column, ' '), std::string(t.m_value.size() - 1, '~'));
         }
@@ -81,7 +80,7 @@ void TokenState::print_token(size_t index, int context)
 
 TokenState tokenise(const std::string &value)
 {
-    std::map<TokenType, std::regex> regexes = {
+    std::vector<std::pair<TokenType, std::regex>> regexes = {
         {TokenType::Identifier, std::regex(R"(^[a-zA-Z][a-zA-Z0-9_]*)")},
         {TokenType::Integer,    std::regex(R"(^[0-9]+)")},
         {TokenType::Operator,   std::regex(R"(^(\+|\-|/|\*|%|<=?|>=?|==|!=))")},
@@ -92,19 +91,20 @@ TokenState tokenise(const std::string &value)
         {TokenType::LBrace,     std::regex(R"(^\{)")},
         {TokenType::RBrace,     std::regex(R"(^\})")},
     };
-    TokenState out(value);
 
-    auto b           = std::begin(value);
-    auto e           = std::end(value);
-    auto line_start  = size_t(0);
-    auto column      = size_t(0);
+    auto out        = TokenState(value);
+    auto b          = std::begin(value);
+    auto e          = std::end(value);
+    auto line_start = size_t(0);
+    auto column     = size_t(0);
 
     while(b != e)
     {
+        // Loop over regex and find the largest match at the current start position.
         auto match = std::optional<std::pair<TokenType,std::smatch>>();
         for(const auto &[type, regex] : regexes)
         {
-            auto new_match      = std::smatch();
+            auto new_match = std::smatch();
             if(std::regex_search(b, e, new_match, regex))
             {
                 if(!match || new_match[0].length() > match->second[0].length())
@@ -114,14 +114,16 @@ TokenState tokenise(const std::string &value)
             }
         }
 
+        // If we haven't found a match at this point we need to error out.
         if(!match)
         {
             char temp[1] = {'\n'};
             auto end_line = std::find_first_of(b, e, std::begin(temp), std::end(temp));
             error("Could not find match.\n{}\n", std::string(b, end_line));
         }
-        auto &[t, m] = *match;
 
+        // Add the token to the list and adjust line, column pointers etc.
+        auto &[t, m] = *match;
         auto len = m[0].length();
         if(t != TokenType::Whitespace)
         {

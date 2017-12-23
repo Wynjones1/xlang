@@ -10,10 +10,11 @@ int main(int argc, char **argv)
     auto tokens = tokenise(data);
     for(int i = 0; i < tokens.size(); i++)
     {
-        tokens.print_token(i, 1);
         fmt::print("{}\n", std::string(80, '*'));
+        tokens.print_token(i, 2);
+        fflush(stdout);
     }
 
-    auto ast = parse(data);
+    //auto ast = parse(data);
     return 0;
 }

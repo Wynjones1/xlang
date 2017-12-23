@@ -1,22 +1,22 @@
 #include "parser.h"
 
-struct IgnoreTest {};
+struct IgnoreTag {};
 template<TokenType tok>
-struct Ignore : public IgnoreTest {
+struct Ignore : public IgnoreTag {
     static constexpr TokenType value = tok;
 };
 
-struct AcceptTest {};
+struct AcceptTag {};
 template<TokenType tok>
-struct Accept : public AcceptTest{
+struct Accept : public AcceptTag{
     static constexpr TokenType value = tok;
 };
 
 template<typename T>
-constexpr bool is_ignore() { return std::is_base_of<IgnoreTest, T>::value;}
+constexpr bool is_ignore() { return std::is_base_of<IgnoreTag, T>::value;}
 
 template<typename T>
-constexpr bool is_accept() { return std::is_base_of<AcceptTest, T>::value;}
+constexpr bool is_accept() { return std::is_base_of<AcceptTag, T>::value;}
 
 template<typename T, typename... Rest>
 auto get_return_type()
