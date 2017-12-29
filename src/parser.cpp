@@ -1,4 +1,10 @@
 #include "parser.h"
+#include <memory>
+#include <type_traits>
+#include <optional>
+#include <map>
+
+#define PARSE_FUNC(TYPE) template<> auto ParseState::parse<TYPE>() -> return_type<TYPE>
 
 struct IgnoreTag {};
 template<TokenType tok>
@@ -62,7 +68,7 @@ using return_type = std::optional<decltype(get_return_type<T, Rest...>())>;
 class ParseState
 {
 public:
-    ParseState(TokenState tokens)
+    ParseState(TokenState &tokens)
     : m_pos(0)
     , m_tokens(tokens)
     {}
@@ -163,17 +169,15 @@ public:
     }
 
     size_t      m_pos;
-    TokenState  m_tokens;
+    TokenState  &m_tokens;
 };
 
-template<>
-auto ParseState::parse<FunctionArgs>() -> return_type<FunctionArgs>
+PARSE_FUNC(FunctionArgs)
 {
     return std::make_unique<List>();
 }
 
-template<>
-auto ParseState::parse<Expression>() -> return_type<Expression>
+PARSE_FUNC(Expression)
 {
     parse<Accept<TokenType::Integer>,
       Accept<TokenType::Operator>,
@@ -181,23 +185,24 @@ auto ParseState::parse<Expression>() -> return_type<Expression>
     return std::make_unique<Expression>();
 }
 
-template<>
-auto ParseState::parse<ReturnStatement>() -> return_type<ReturnStatement>
+PARSE_FUNC(ReturnStatement)
 {
-    parse<Ignore<TokenType::KeywordReturn>, Expression>();
-    return std::make_unique<ReturnStatement>();
+    if(auto temp = parse<Ignore<TokenType::KeywordReturn>, Expression>())
+    {
+        auto &[expr] = *temp;
+        return std::make_unique<ReturnStatement>(expr);
+    }
+    return std::nullopt;
 }
 
-template<>
-auto ParseState::parse<StatementList>() -> return_type<StatementList>
+PARSE_FUNC(StatementList)
 {
     return any<ReturnStatement, Expression>();
 }
 
-template<>
-auto ParseState::parse<Top>() -> return_type<Top>
+PARSE_FUNC(Top)
 {
-    auto x = parse<Ignore<TokenType::KeywordFunction>,
+    auto temp = parse<Ignore<TokenType::KeywordFunction>,
           Accept<TokenType::Identifier>,
           Ignore<TokenType::LParen>,
                  FunctionArgs,
@@ -205,11 +210,23 @@ auto ParseState::parse<Top>() -> return_type<Top>
           Ignore<TokenType::LBrace>,
                  StatementList,
           Ignore<TokenType::RBrace>>();
-    return std::tuple<AstPtr>(nullptr);
+    if(temp)
+    {
+        auto &[id, args, stmts] = *temp;
+        auto out = std::make_unique<Function>(id, args, stmts);
+        return out;
+    }
+    return std::nullopt;
 }
 
 ParseResult parse(const std::string &value)
 {
-    ParseResult out = { TokenState(value), nullptr };
+    ParseResult out = { TokenState(value)};
+    fmt::print("{}\n", out.m_tokens.m_tokens.size());
+    auto res = ParseState(out.m_tokens).template parse<Top>();
+    if(res)
+    {
+        out.m_ast = std::move(std::get<0>(*res));
+    }
     return out;
 }

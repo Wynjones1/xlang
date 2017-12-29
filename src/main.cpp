@@ -7,14 +7,9 @@ int main(int argc, char **argv)
 {
     ASSERT_ERROR(argc > 1, "Must supply more than one argument.");
     auto data = read_file(argv[1]);
-    auto tokens = tokenise(data);
-    for(int i = 0; i < tokens.size(); i++)
-    {
-        fmt::print("{}\n", std::string(80, '*'));
-        tokens.print_token(i, 2);
-        fflush(stdout);
-    }
+    auto tokens = TokenState(data);
 
-    //auto ast = parse(data);
+    auto parse_result = parse(data);
+    fmt::print("{}\n", parse_result.m_ast->print());
     return 0;
 }

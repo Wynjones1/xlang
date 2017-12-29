@@ -41,8 +41,8 @@ Token &TokenState::add_token(TokenType type, size_t line_offset, size_t column, 
     {
         m_lines.emplace_back(m_data.data() + line_offset, column + len);
     }
-    debug::print("Added token: line offset {:04}, column {:03}, length {:02}, TokenType::{:<20}, value '{}'\n",
-                                                           line_offset, column, len, to_string(type),
+    debug::print("Added token: line {:04}, column {:03}, length {:02}, TokenType::{:<20}, value '{}'\n",
+                                                           m_lines.size(), column, len, to_string(type),
                                                            (type == TokenType::Newline) ? "<newline>"sv : view);
     return back();
 }
@@ -78,7 +78,8 @@ void TokenState::print_token(size_t index, int context)
     }
 }
 
-TokenState tokenise(const std::string &value)
+TokenState::TokenState(const std::string &value)
+: m_data(value)
 {
     std::vector<std::pair<TokenType, std::regex>> regexes = {
         {TokenType::Identifier, std::regex(R"(^[a-zA-Z][a-zA-Z0-9_]*)")},
@@ -92,9 +93,8 @@ TokenState tokenise(const std::string &value)
         {TokenType::RBrace,     std::regex(R"(^\})")},
     };
 
-    auto out        = TokenState(value);
-    auto b          = std::begin(value);
-    auto e          = std::end(value);
+    auto b          = std::begin(m_data);
+    auto e          = std::end(m_data);
     auto line_start = size_t(0);
     auto column     = size_t(0);
 
@@ -127,7 +127,7 @@ TokenState tokenise(const std::string &value)
         auto len = m[0].length();
         if(t != TokenType::Whitespace)
         {
-            auto &tok = out.add_token(t, line_start, column, len);
+            auto &tok = add_token(t, line_start, column, len);
         }
         column += len;
         b      += len;
@@ -137,5 +137,4 @@ TokenState tokenise(const std::string &value)
             column      = 0;
         }
     }
-    return out;
 }

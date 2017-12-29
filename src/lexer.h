@@ -62,13 +62,11 @@ struct Token
 
 struct TokenState
 {
-    std::string                   m_data;
+    const std::string m_data;
     std::vector<Token>            m_tokens;
     std::vector<std::string_view> m_lines;
 
-    TokenState(const std::string &data)
-    : m_data(data)
-    {}
+    TokenState(const std::string &data);
 
     Token  &back();
     Token  &at(size_t index);
@@ -77,6 +75,3 @@ struct TokenState
     size_t  num_lines();
     void    print_token(size_t index, int context = 0);
 };
-
-TokenState tokenise(const std::string &value);
-

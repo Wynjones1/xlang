@@ -9,7 +9,7 @@ namespace debug
     {
         if(getenv("DEBUG"))
         {
-            fmt::print(std::forward<Args>(args)...);
+            fmt::print(stderr, std::forward<Args>(args)...);
         }
     }
 };

@@ -9,6 +9,6 @@
 !/src/*.h
 !/tests/*.cpp
 !/tests/*.h
-!/script/*.py
-!/data/*.x
+!/scripts/*.py
+!/data/*
 /build/
